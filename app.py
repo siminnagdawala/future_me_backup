@@ -686,6 +686,14 @@ def get_chat_history():
     except Exception as e:
         return jsonify({"error": f"Error: {str(e)}"}), 500
 
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({
+        "message": "Backend is running!",
+        "port": os.environ.get("PORT", 5000),
+        "host": "0.0.0.0"
+    })
+    
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     print(f"🚀 Running on port: {port}")
