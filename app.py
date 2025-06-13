@@ -693,9 +693,11 @@ def home():
         "port": os.environ.get("PORT", 5000),
         "host": "0.0.0.0"
     })
-    
+
+print(f"DEBUG: PORT environment variable = {os.environ.get('PORT', 'NOT SET')}")
+print(f"DEBUG: All environment variables: {list(os.environ.keys())}")
+
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     print(f"🚀 Running on port: {port}")
     app.run(debug=True, host='0.0.0.0', port=port)
-
