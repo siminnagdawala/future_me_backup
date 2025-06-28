@@ -82,32 +82,45 @@ def signup():
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500
 
-
 @app.route('/login', methods=['POST'])
 def login():
     try:
         data = request.json
         username = data.get("username", "").strip()
         password = data.get("password", "").strip()
-
+        
         if not USERNAME_REGEX.match(username):
             return jsonify({"message": "Invalid username format"}), 400
-
+        
         user = mongo.db.users.find_one({"username": username})
         if not user or not check_password_hash(user["password"], password):
             return jsonify({"message": "Invalid username or password"}), 401
-
-        prediction_data = mongo.db.predictions.find_one({"username": username}) or {}
-
-        return jsonify({
-            "message": "Login successful",
-            "prediction": prediction_data.get("career_prediction", ""),
-            "riasec_scores": prediction_data.get("riasec_scores", {}),
-            "riasec_chart": prediction_data.get("riasec_chart", ""),
-        }), 200
-
+        
+        prediction_data = mongo.db.predictions.find_one({"username": username})
+        
+        # Check if user has completed the questionnaire
+        has_completed_questionnaire = prediction_data is not None and prediction_data.get("career_prediction")
+        
+        if has_completed_questionnaire:
+            # User has completed questionnaire, send to dashboard
+            return jsonify({
+                "message": "Login successful",
+                "has_completed_questionnaire": True,
+                "prediction": prediction_data.get("career_prediction", ""),
+                "riasec_scores": prediction_data.get("riasec_scores", {}),
+                "riasec_chart": prediction_data.get("riasec_chart", ""),
+            }), 200
+        else:
+            # User hasn't completed questionnaire, send to questions page
+            return jsonify({
+                "message": "Login successful",
+                "has_completed_questionnaire": False,
+                "user_id": str(user["_id"]),  # Send user_id for questionnaire
+            }), 200
+            
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500
+    
 # ML Prediction
 def predict_career_from_json(input_json):
     model = joblib.load("pkl_files/career_model.pkl")
